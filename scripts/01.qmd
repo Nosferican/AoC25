@@ -1,0 +1,194 @@
+---
+title: "Inputs from the national economic accounts"
+author:
+  - id: jbsc
+    given: José Bayoán
+    family: Santiago Calderón
+    orcid: 0000-0002-8406-6175
+    email: Jose.Santiago-Calderon@bea.gov
+    degrees:
+      - PhD
+    affiliations:
+      - name: Bureau of Economic Analysis
+        group: Analysis and Research Group
+        department: National Economic Accounts
+        city: Suitland
+        state: MD
+        country: USA
+        postal-code: 20746
+        url: https://www.bea.gov
+        ror: https://ror.org/03b17a012
+        ringgold: 17145
+        isni: 0000000101060898
+date: today
+date-format: iso
+format:
+  html: 
+    code-fold: true
+    self-contained: true
+    smooth-scroll: true
+    html-math-method: katex
+engine: julia
+abstract: |
+	Avent of Code 2025.
+keywords:
+  - Advent of Code
+license:
+  text: >
+	
+  type: open-access
+  url: 
+---
+
+We start by instantiating the environment.
+
+```{julia}
+const DIR_PRJ = string(strip(read(`git rev-parse --show-toplevel`, String)))
+using Pkg
+Pkg.activate(DIR_PRJ)
+```
+
+```{julia}
+using AoC25
+using Test
+using Unicode
+```
+
+# Day 1
+
+```{julia}
+@testset "Day 1" begin
+	input = ["L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99", "R14", "L82"]
+	output = [50]
+	n = 0
+	for x in input
+		newpos, times_at_zero = Day1.rotate(last(output), x)
+		push!(output, newpos)
+		n += times_at_zero
+	end
+	@test output == [50, 82, 52, 0, 95, 55, 0, 99, 0, 14, 32]
+	@test count(iszero, output) == 3
+	@test n == 6
+end
+```
+
+```{julia}
+begin
+	input = readlines(joinpath(DIR_PRJ, "data", "day1_input.txt"))
+	output = [50]
+	n = 0
+	for x in input
+		newpos, times_at_zero = Day1.rotate(last(output), x)
+		push!(output, newpos)
+		n += times_at_zero
+	end
+	count(iszero, output), n
+end
+```
+
+# Day 2
+
+```{julia}
+@testset begin
+	input = split(
+		"11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124",
+		','
+	)
+	input = [ range(parse.(Int, split(elem, '-'))...) for elem in input ]
+	output = [ filter(Day2.isinvalid, elem) for elem in input ]
+	@test length.(output) == [2, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0]
+	@test sum(sum(elem) for elem in output) == 1227775554
+	output = [ filter(Day2.isinvalid_, elem) for elem in input ]
+	@test sum(sum(elem) for elem in output) == 4174379265
+end
+```
+
+```{julia}
+begin
+	input = split(only(readlines(joinpath(DIR_PRJ, "data", "day2_input.txt"))), ',')
+	input = [ range(parse.(Int, split(elem, '-'))...) for elem in input ]
+	output_a = [ filter(Day2.isinvalid, elem) for elem in input ]
+	output_b = [ filter(Day2.isinvalid_, elem) for elem in input ]
+	sum(sum(elem) for elem in output_a), sum(sum(elem) for elem in output_b)
+end
+```
+
+# Day 3
+
+```{julia}
+@testset begin
+	input = split("987654321111111\n811111111111119\n234234234234278\n818181911112111")
+	# input = input[4]
+	output = largestjoltage.(input, 2)
+	@test output == [98, 89, 78, 92]
+	@test sum(output) == 357
+	output = largestjoltage.(input, 12)
+	@test output == [987654321111, 811111111119, 434234234278, 888911112111]
+	@test sum(output) == 3121910778619
+end
+```
+
+```{julia}
+begin
+	input = readlines(joinpath(DIR_PRJ, "data", "day3_input.txt"))
+	output = largestjoltage.(input, 12)
+	sum(output)
+end
+```
+
+# Day 4
+
+```{julia}
+@testset begin
+	input = "..@@.@@@@.\n@@@.@.@.@@\n@@@@@.@.@@\n@.@@@@..@.\n@@.@@@@.@@\n.@@@@@@@.@\n.@.@.@.@@@\n@.@@@.@@@@\n.@@@@@@@@.\n@.@.@@@.@."
+	input₀ = convert(Matrix{Bool}, reduce(vcat, permutedims([ gm == "@" for gm in graphemes(ln) ]) for ln in split(input, '\n')))
+	input = copy(input₀)
+	to_remove = AoC25.Day4.accesible(input₀)
+	@test length(to_remove) == 13
+	while !isempty(to_remove)
+		for idx in to_remove
+			input[idx] = false
+		end
+		to_remove = AoC25.Day4.accesible(input)
+	end
+	@test sum(input₀) - sum(input) == 43
+end
+```
+
+```{julia}
+	input = convert(BitMatrix, reduce(vcat, permutedims([ gm == "@" for gm in graphemes(ln) ]) for ln in split(input, '\n')))
+	neighborhood = 0
+	for idx₀ in findall(input)
+		x₀, y₀ = idx₀.I
+		neighbors = CartesianIndex[]
+		for idx₁ in findall(input)
+			x₁, y₁ = idx₁.I
+			d = (x₀ - x₁)^2 + (y₀ - y₁)^2
+			if d ∈ 1:2
+				push!(neighbors, idx₁)
+			end
+		end
+		if length(neighbors) < 4
+			neighborhood += 1
+		end
+	end
+	neighbors = [ elem ]
+end
+```
+
+```{julia}
+begin
+	input = join(readlines(joinpath(DIR_PRJ, "data", "day4_input.txt")), '\n')
+	input₀ = convert(Matrix{Bool}, reduce(vcat, permutedims([ gm == "@" for gm in graphemes(ln) ]) for ln in split(input, '\n')))
+	input = copy(input₀)
+	to_remove = AoC25.Day4.accesible(input₀)
+	@test length(to_remove) == 1547
+	while !isempty(to_remove)
+		for idx in to_remove
+			input[idx] = false
+		end
+		to_remove = AoC25.Day4.accesible(input)
+	end
+	@test sum(input₀) - sum(input) == 8948
+end
+```
