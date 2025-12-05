@@ -4,7 +4,9 @@ version = "0.1.0"
 authors = ["José Bayoán Santiago Calderón <naoyabpr@gmail.com>"]
 
 [deps]
+Intervals = "d8418881-c3e1-53bb-8760-2df7ec849ed5"
 Unicode = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
 [compat]
+Intervals = "1.10.0"
 Unicode = "1.11.0"

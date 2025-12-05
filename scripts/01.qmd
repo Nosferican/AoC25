@@ -52,6 +52,7 @@ Pkg.activate(DIR_PRJ)
 using AoC25
 using Test
 using Unicode
+using Intervals
 ```
 
 # Day 1
@@ -176,19 +177,44 @@ end
 end
 ```
 
+# Day 5
+
+```{julia}
+@testset " " begin
+	input = split("3-5\n10-14\n16-20\n12-18\n\n1\n5\n8\n11\n17\n32", '\n')
+	ranges = [
+		UnitRange(parse.(Int, split(elem, '-'))...) for elem in input[1:findfirst(isempty, input) - 1]
+	]
+	ingridients = [ parse(Int, elem) for elem in input[findfirst(isempty, input) + 1:end] ]
+	fresh = filter(x -> any(range -> x ∈ range, ranges), ingridients)
+	length(fresh) == 13
+end
+```
+
 ```{julia}
 begin
-	input = join(readlines(joinpath(DIR_PRJ, "data", "day4_input.txt")), '\n')
-	input₀ = convert(Matrix{Bool}, reduce(vcat, permutedims([ gm == "@" for gm in graphemes(ln) ]) for ln in split(input, '\n')))
-	input = copy(input₀)
-	to_remove = AoC25.Day4.accesible(input₀)
-	@test length(to_remove) == 1547
-	while !isempty(to_remove)
-		for idx in to_remove
-			input[idx] = false
-		end
-		to_remove = AoC25.Day4.accesible(input)
-	end
-	@test sum(input₀) - sum(input) == 8948
+	input = readlines(joinpath(DIR_PRJ, "data", "day5_input.txt"))
+	ranges = [
+		UnitRange(parse.(Int, split(elem, '-'))...) for elem in input[1:findfirst(isempty, input) - 1]
+	]
+	ingridients = [ parse(Int, elem) for elem in input[findfirst(isempty, input) + 1:end] ]
+	fresh = filter(x -> any(range -> x ∈ range, ranges), ingridients)
+	intervals = [ Interval{Closed,Closed}(elem.start, elem.stop) for elem in ranges ]
+	sum(elem -> length(UnitRange{Int}(elem.first:elem.last)), union(intervals))
+end
+```
+
+# Day 6
+
+```{julia}
+begin
+	input = readlines(joinpath(DIR_PRJ, "data", "day6_input.txt"))
+	ranges = [
+		UnitRange(parse.(Int, split(elem, '-'))...) for elem in input[1:findfirst(isempty, input) - 1]
+	]
+	ingridients = [ parse(Int, elem) for elem in input[findfirst(isempty, input) + 1:end] ]
+	fresh = filter(x -> any(range -> x ∈ range, ranges), ingridients)
+	intervals = [ Interval{Closed,Closed}(elem.start, elem.stop) for elem in ranges ]
+	sum(elem -> length(UnitRange{Int}(elem.first:elem.last)), union(intervals))
 end
 ```
