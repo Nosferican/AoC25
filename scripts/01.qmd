@@ -207,14 +207,47 @@ end
 # Day 6
 
 ```{julia}
-begin
+@testset "Day 6" begin
+	input = split("123 328  51 64 \n 45 64  387 23 \n  6 98  215 314\n*   +   *   +  ", '\n')
+	input_ops = split(input[end], r"\s+")[1:end - 1] .== "+"
+	input_vals = reduce(vcat, permutedims(parse.(Int, split(strip(ln), r"\s+"))) for ln in input[1:end - 1])
+	@test sum(input_ops[col] ? sum(input_vals[:,col]) : prod(input_vals[:,col]) for col in eachindex(input_ops)) == 4277556
+	lns = collect.(graphemes.(input))
+	lns = [ join(getindex.(lns[1:end - 1], col)) for col in eachindex(lns[1]) ]
+	output = Vector{Int}[]
+	tmp = Int[]
+	for ln in lns
+		if contains(ln, r"^\s+$")
+			push!(output, copy(tmp))
+			empty!(tmp)
+		else
+			push!(tmp, parse(Int, ln))
+		end
+	end
+	push!(output, copy(tmp))
+	@test sum(input_ops[col] ? sum(output[col]) : prod(output[col]) for col in eachindex(input_ops)) == 3263827
+end
+```
+
+```{julia}
+@testset begin
 	input = readlines(joinpath(DIR_PRJ, "data", "day6_input.txt"))
-	ranges = [
-		UnitRange(parse.(Int, split(elem, '-'))...) for elem in input[1:findfirst(isempty, input) - 1]
-	]
-	ingridients = [ parse(Int, elem) for elem in input[findfirst(isempty, input) + 1:end] ]
-	fresh = filter(x -> any(range -> x ∈ range, ranges), ingridients)
-	intervals = [ Interval{Closed,Closed}(elem.start, elem.stop) for elem in ranges ]
-	sum(elem -> length(UnitRange{Int}(elem.first:elem.last)), union(intervals))
+	input_ops = split(input[end], r"\s+")[1:end - 1] .== "+"
+	input_vals = reduce(vcat, permutedims(parse.(Int, split(strip(ln), r"\s+"))) for ln in input[1:end - 1])
+	@test sum(input_ops[col] ? sum(input_vals[:,col]) : prod(input_vals[:,col]) for col in eachindex(input_ops)) == 4719804927602
+	lns = collect.(graphemes.(input))
+	lns = [ join(getindex.(lns[1:end - 1], col)) for col in eachindex(lns[1]) ]
+	output = Vector{Int}[]
+	tmp = Int[]
+	for ln in lns
+		if contains(ln, r"^\s+$")
+			push!(output, copy(tmp))
+			empty!(tmp)
+		else
+			push!(tmp, parse(Int, ln))
+		end
+	end
+	push!(output, copy(tmp))
+	@test sum(input_ops[col] ? sum(output[col]) : prod(output[col]) for col in eachindex(input_ops)) == 9608327000261
 end
 ```
