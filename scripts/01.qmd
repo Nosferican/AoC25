@@ -251,3 +251,146 @@ end
 	@test sum(input_ops[col] ? sum(output[col]) : prod(output[col]) for col in eachindex(input_ops)) == 9608327000261
 end
 ```
+
+# Day 7
+
+```{julia}
+input = """
+.......S.......
+...............
+.......^.......
+...............
+......^.^......
+...............
+.....^.^.^.....
+...............
+....^.^...^....
+...............
+...^.^...^.^...
+...............
+..^...^.....^..
+...............
+.^.^.^.^.^...^.
+..............."""
+input = reduce(vcat, permutedims(split(ln, "")) for ln in split(input, '\n'))
+input[2, findfirst(isequal("S"), input[1,:])] = "|"
+
+function step_down(a, b)
+	a = input[1]
+	S = findfirst(contains("(S|\|"), a)
+	if isa(S, Integer)
+		output = S
+	else
+		beam = findfirst()
+end
+
+states = Vector{typeof(input)}()
+function go_down_row!(states, state)
+	particules = findall(isequal("|"), state)
+	row = maximum(elem.I[1] for elem in particules)
+	idx = first(particule for particule in particules if particule.I[1] == row)
+	col = idx.I[2]
+	while row < (size(state, 1) - 1)
+		particules = findall(isequal("|"), state)
+		row = maximum(elem.I[1] for elem in particules)
+		idx = first(particule for particule in particules if particule.I[1] == row)
+		col = idx.I[2]
+		if state[row + 1, col] == "."
+			state[row + 1, col] = "|"
+		elseif state[row + 1, col] == "^"
+			if col > 1
+				state_ = copy(state)
+				state_[row + 1, col - 1] = "|"
+				push!(states, state_)
+			end
+			if col < size(state, 2)
+				state_ = copy(state)
+				state_[row + 1, col + 1] = "|"
+				push!(states, state_)
+			end
+		end
+	end
+end
+go_down_row!(states, input)
+foreach(println, states)
+states[1]
+states[2]
+states[3]
+states[1]
+states[1]
+states[1]
+states[1]
+x = 0
+for row in 2:(size(input, 1) - 1)
+	hasbeam = findall(isequal("|"), input[row,:])
+	for beam in hasbeam
+		if input[row + 1, beam] == "."
+			input[row + 1, beam] = "|"
+		elseif input[row + 1, beam] == "^"
+			x += 1
+			if beam > 1
+				input[row + 1, beam - 1] = "|"
+			end
+			if beam < size(input, 2)
+				input[row + 1, beam + 1] = "|"
+			end
+		end
+	end
+end
+reduce(vcat, join(row, "") for row in eachrow(input))
+x
+input = input[1:4,:]
+struct State
+	output :: Union{Nothing,Vector{State}}
+	function State(obj)
+		output = State[]
+		particules = findall(isequal("|"), input)
+		row = maximum(elem.I[1] for elem in particules)
+		idx = first(particule for particule in particules if particule.I[1] == row)
+		col = idx.I[2]
+		for row in row:(size(input, 1) - 1)
+			if input[row + 1, col] == "."
+				input[row + 1, col] = "|"
+			elseif input[row + 1, col] == "^"
+				if col > 1
+					input_ = copy(input)
+					input_[row + 1, col - 1] = "|"
+					push!(output, State(input_))
+				end
+				if col < size(input, 2)
+					input_ = copy(input)
+					input_[row + 1, col + 1] = "|"
+					push!(output, State(input_))
+				end
+			end
+		end
+		new(isempty(output) ? nothing : output)
+	end
+end
+output = State(input)
+```
+
+
+```{julia}
+input = readlines(joinpath(DIR_PRJ, "data", "day7_input.txt"))
+input = reduce(vcat, permutedims(split(ln, "")) for ln in input)
+input[2, findfirst(isequal("S"), input[1,:])] = "|"
+x = 0
+for row in 2:(size(input, 1) - 1)
+	hasbeam = findall(isequal("|"), input[row,:])
+	for beam in hasbeam
+		if input[row + 1, beam] == "."
+			input[row + 1, beam] = "|"
+		elseif input[row + 1, beam] == "^"
+			x += 1
+			if beam > 1
+				input[row + 1, beam - 1] = "|"
+			end
+			if beam < size(input, 2)
+				input[row + 1, beam + 1] = "|"
+			end
+		end
+	end
+end
+reduce(vcat, join(row, "") for row in eachrow(input))
+```
