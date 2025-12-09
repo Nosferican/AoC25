@@ -271,14 +271,12 @@ function solve!(queue, input)
 	popfirst!(queue)
 	return 0
 end
-queue = [findfirst(isequal("S"), input)]
-sol = 0
-while !isempty(queue)
-	sol += solve!(queue, input)
-end
-sol
-
-
+# queue = [findfirst(isequal("S"), input)]
+# sol = 0
+# while !isempty(queue)
+# 	sol += solve!(queue, input)
+# end
+# sol
 struct State
 	# input :: Matrix{String}
 	left :: Union{Nothing,State}
@@ -325,176 +323,294 @@ end
 
 ```{julia}
 @testset "Day 7" begin
-input = """
-.......S.......
-...............
-.......^.......
-...............
-......^.^......
-...............
-.....^.^.^.....
-...............
-....^.^...^....
-...............
-...^.^...^.^...
-...............
-..^...^.....^..
-...............
-.^.^.^.^.^...^.
-..............."""
-input = reduce(vcat, permutedims(split(ln, "")) for ln in split(input, '\n'))
-input_ = copy(input)
-val = zeros(Int, size(input))
-input[2, findfirst(isequal("S"), input[1,:])] = "|"
-val[2, findfirst(isequal("S"), input[1,:])] = 1
-x = 0
-for row in 2:2:(size(input, 1) - 2)
-	hasbeam = findall(isequal("|"), input[row,:])
-	for beam in hasbeam
-		if input[row + 1, beam] == "."
-			input[row + 2, beam] = "|"
-			val[row + 2, beam] += val[row, beam]
-		elseif input[row + 1, beam] == "^"
-			x += 1
-			if beam > 1
-				input[row + 2, beam - 1] = "|"
-				val[row + 2, beam - 1] += val[row, beam]
-			end
-			if beam < size(input, 2)
-				input[row + 2, beam + 1] = "|"
-				val[row + 2, beam + 1] += val[row, beam]
-			end
-		end
-	end
-end
-reduce(vcat, join(row, "") for row in eachrow(input))
-@test x == 21
-@test sum(val[end,:]) == 40
+    input = """
+    .......S.......
+    ...............
+    .......^.......
+    ...............
+    ......^.^......
+    ...............
+    .....^.^.^.....
+    ...............
+    ....^.^...^....
+    ...............
+    ...^.^...^.^...
+    ...............
+    ..^...^.....^..
+    ...............
+    .^.^.^.^.^...^.
+    ..............."""
+    input = reduce(vcat, permutedims(split(ln, "")) for ln in split(input, '\n'))
+    input_ = copy(input)
+    val = zeros(Int, size(input))
+    input[2, findfirst(isequal("S"), input[1, :])] = "|"
+    val[2, findfirst(isequal("S"), input[1, :])] = 1
+    x = 0
+    for row in 2:2:(size(input, 1)-2)
+        hasbeam = findall(isequal("|"), input[row, :])
+        for beam in hasbeam
+            if input[row+1, beam] == "."
+                input[row+2, beam] = "|"
+                val[row+2, beam] += val[row, beam]
+            elseif input[row+1, beam] == "^"
+                x += 1
+                if beam > 1
+                    input[row+2, beam-1] = "|"
+                    val[row+2, beam-1] += val[row, beam]
+                end
+                if beam < size(input, 2)
+                    input[row+2, beam+1] = "|"
+                    val[row+2, beam+1] += val[row, beam]
+                end
+            end
+        end
+    end
+    reduce(vcat, join(row, "") for row in eachrow(input))
+    @test x == 21
+    @test sum(val[end, :]) == 40
 end
 ```
 
 ```{julia}
-input = readlines(joinpath(DIR_PRJ, "data", "day7_input.txt"))
-input = reduce(vcat, permutedims(split(ln, "")) for ln in input)
-input_ = copy(input)
-val = zeros(Int, size(input))
-input[2, findfirst(isequal("S"), input[1,:])] = "|"
-val[2, findfirst(isequal("S"), input[1,:])] = 1
-x = 0
-for row in 2:2:(size(input, 1) - 2)
-	hasbeam = findall(isequal("|"), input[row,:])
-	for beam in hasbeam
-		if input[row + 1, beam] == "."
-			input[row + 2, beam] = "|"
-			val[row + 2, beam] += val[row, beam]
-		elseif input[row + 1, beam] == "^"
-			x += 1
-			if beam > 1
-				input[row + 2, beam - 1] = "|"
-				val[row + 2, beam - 1] += val[row, beam]
-			end
-			if beam < size(input, 2)
-				input[row + 2, beam + 1] = "|"
-				val[row + 2, beam + 1] += val[row, beam]
-			end
-		end
-	end
+@testset "Day 7" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day7_input.txt"))
+    input = reduce(vcat, permutedims(split(ln, "")) for ln in input)
+    input_ = copy(input)
+    val = zeros(Int, size(input))
+    input[2, findfirst(isequal("S"), input[1, :])] = "|"
+    val[2, findfirst(isequal("S"), input[1, :])] = 1
+    x = 0
+    for row in 2:2:(size(input, 1)-2)
+        hasbeam = findall(isequal("|"), input[row, :])
+        for beam in hasbeam
+            if input[row+1, beam] == "."
+                input[row+2, beam] = "|"
+                val[row+2, beam] += val[row, beam]
+            elseif input[row+1, beam] == "^"
+                x += 1
+                if beam > 1
+                    input[row+2, beam-1] = "|"
+                    val[row+2, beam-1] += val[row, beam]
+                end
+                if beam < size(input, 2)
+                    input[row+2, beam+1] = "|"
+                    val[row+2, beam+1] += val[row, beam]
+                end
+            end
+        end
+    end
+    reduce(vcat, join(row, "") for row in eachrow(input))
+    @test x == 1690
+    @test sum(val[end, :]) == 221_371_496_188_107
 end
-reduce(vcat, join(row, "") for row in eachrow(input))
-@test x == 1690
-@test sum(val[end,:]) == 221371496188107
 ```
 
 # Day 8
 
 ```{julia}
-input = """162,817,812
-57,618,57
-906,360,560
-592,479,940
-352,342,300
-466,668,158
-542,29,236
-431,825,988
-739,650,466
-52,470,668
-216,146,977
-819,987,18
-117,168,530
-805,96,715
-346,949,466
-970,615,88
-941,993,340
-862,61,35
-984,92,344
-425,690,689"""
-input = split(input, '\n')
-input = [ parse.(Int, split(ln, ',')) for ln in input ]
-dist(a, b) = sum(abs2, a - b)
-d = Tuple{Float64, Tuple{Int64, Int64}}[]
-for a in 1:(length(input) - 1)
-	for b in (a + 1):length(input)
-		push!(d, (dist(input[a], input[b]), (a, b)))
-	end
+@testset "Day 8" begin
+    input = """162,817,812
+    57,618,57
+    906,360,560
+    592,479,940
+    352,342,300
+    466,668,158
+    542,29,236
+    431,825,988
+    739,650,466
+    52,470,668
+    216,146,977
+    819,987,18
+    117,168,530
+    805,96,715
+    346,949,466
+    970,615,88
+    941,993,340
+    862,61,35
+    984,92,344
+    425,690,689"""
+    input = split(input, '\n')
+    input = [parse.(Int, split(ln, ',')) for ln in input]
+    dist(a, b) = sum(abs2, a - b)
+    d = Tuple{Float64,Tuple{Int64,Int64}}[]
+    for a in 1:(length(input)-1)
+        for b in (a+1):length(input)
+            push!(d, (dist(input[a], input[b]), (a, b)))
+        end
+    end
+    sort!(d)
+    d = last.(d)
+    circuits = [Set(elem) for elem in eachindex(input)]
+    for elem in d[1:10]
+        # elem = d[1]
+        a, b = elem
+        x = findfirst(circuit -> a ∈ circuit, circuits)
+        y = findfirst(circuit -> b ∈ circuit, circuits)
+        if x ≠ y
+            union!(circuits[x], circuits[y])
+            deleteat!(circuits, y)
+        end
+    end
+    @test prod(sort!(length.(circuits), rev=true)[1:3]) == 40
 end
-sort!(d)
-d = last.(d)
-circuits = [ Set(elem) for elem in eachindex(input) ]
-for elem in d[1:10]
-	# elem = d[1]
-	a, b = elem
-	x = findfirst(circuit -> a ∈ circuit, circuits)
-	y = findfirst(circuit -> b ∈ circuit, circuits)
-	if x ≠ y
-		union!(circuits[x], circuits[y])
-		deleteat!(circuits, y)
-	end
-end
-@test prod(sort!(length.(circuits), rev = true)[1:3]) == 40
 ```
 
 ```{julia}
 @testset "Day 8" begin
-input = readlines(joinpath(DIR_PRJ, "data", "day8_input.txt"))
-input = [ parse.(Int, split(ln, ',')) for ln in input ]
-dist(a, b) = sum(abs2, a - b)
-d = Tuple{Float64, Tuple{Int64, Int64}}[]
-for a in 1:(length(input) - 1)
-	for b in (a + 1):length(input)
-		push!(d, (dist(input[a], input[b]), (a, b)))
-	end
+    input = readlines(joinpath(DIR_PRJ, "data", "day8_input.txt"))
+    input = [parse.(Int, split(ln, ',')) for ln in input]
+    dist(a, b) = sum(abs2, a - b)
+    d = Tuple{Float64,Tuple{Int64,Int64}}[]
+    for a in 1:(length(input)-1)
+        for b in (a+1):length(input)
+            push!(d, (dist(input[a], input[b]), (a, b)))
+        end
+    end
+    sort!(d)
+    d = last.(d)
+    circuits = [Set(elem) for elem in eachindex(input)]
+    for elem in d[1:1000]
+        a, b = elem
+        x = findfirst(circuit -> a ∈ circuit, circuits)
+        y = findfirst(circuit -> b ∈ circuit, circuits)
+        if x ≠ y
+            union!(circuits[x], circuits[y])
+            deleteat!(circuits, y)
+        end
+    end
+    @test prod(sort!(length.(circuits), rev=true)[1:3]) == 115_885
+    output = 0
+    for elem in d[1001:end]
+        a, b = elem
+        x = findfirst(circuit -> a ∈ circuit, circuits)
+        y = findfirst(circuit -> b ∈ circuit, circuits)
+        if x ≠ y
+            union!(circuits[x], circuits[y])
+            deleteat!(circuits, y)
+        end
+        if length(circuits) == 1
+            output += (input[a][1] * input[b][1])
+            break
+        end
+    end
+    @test output == 274_150_525
 end
-sort!(d)
-d = last.(d)
-circuits = [ Set(elem) for elem in eachindex(input) ]
-for elem in d[1:1000]
-	a, b = elem
-	x = findfirst(circuit -> a ∈ circuit, circuits)
-	y = findfirst(circuit -> b ∈ circuit, circuits)
-	if x ≠ y
-		union!(circuits[x], circuits[y])
-		deleteat!(circuits, y)
-	end
+```
+
+# Day 9
+
+```{julia}
+function area(x, y)
+	x₀, y₀ = x.I
+	x₁, y₁ = y.I
+	x = abs(x₁ - x₀) + 1
+	y = abs(y₁ - y₀) + 1
+	x * y
 end
-@test prod(sort!(length.(circuits), rev = true)[1:3]) == 115885
-output = 0
-for elem in d[1001:end]
-	a, b = elem
-	x = findfirst(circuit -> a ∈ circuit, circuits)
-	y = findfirst(circuit -> b ∈ circuit, circuits)
-	if x ≠ y
-		union!(circuits[x], circuits[y])
-		deleteat!(circuits, y)
-	end
-	if length(circuits) == 1
-		output += (input[a][1] * input[b][1])
-		break
-	end
-end
-@test output == 274150525
+function are_there_red_or_green(x, y)
+	x₀, y₀ = x.I
+	x₁, y₁ = y.I
+	x₋, x₊ = sort([x₀, x₁])
+	y₋, y₊ = sort([y₀, y₁])
+	top = filter(elem -> elem[1] ≤ y₋, horizontal)
+	isempty(top) && return false
+	top = union([Interval(elem[2], elem[3]) for elem in top])
+	top = any(elem -> (elem.first ≤ x₋) & (elem.last ≥ x₊), top)
+	bottom = filter(elem -> elem[1] ≥ y₊, horizontal)
+	isempty(bottom) && return false
+	bottom = union([Interval(elem[2], elem[3]) for elem in bottom])
+	bottom = any(elem -> (elem.first ≤ x₋) & (elem.last ≥ x₊), bottom)
+	left = filter(elem -> elem[1] ≤ x₋, vertical)
+	isempty(left) && return false
+	left = union([Interval(elem[2], elem[3]) for elem in left])
+	left = any(elem -> (elem.first ≤ y₋) & (elem.last ≥ y₊), left)
+	right = filter(elem -> elem[1] ≥ x₊, vertical)
+	isempty(right) && return false
+	right = union([Interval(elem[2], elem[3]) for elem in right])
+	right = any(elem -> (elem.first ≤ y₋) & (elem.last ≥ y₊), right)
+	top & bottom & left & right
 end
 ```
 
 ```{julia}
+@testset "Day 9" begin
+    input = """7,1
+    11,1
+    11,7
+    9,7
+    9,5
+    2,5
+    2,3
+    7,3"""
+    input = [CartesianIndex(parse.(Int, split(ln, ','))...) for ln in split(input, '\n')]
+    choices = Tuple{Float64,NTuple{2,CartesianIndex}}[]
+    for idx₀ in firstindex(input):prevind(input, lastindex(input))
+        for idx₁ in nextind(input, idx₀):lastindex(input)
+            push!(choices, (area(input[idx₀], input[idx₁]), (input[idx₀], input[idx₁])))
+        end
+    end
+    @test first(first(findmax(choices))) == 50
+    horizontal = NTuple{3,Int}[]
+    vertical = NTuple{3,Int}[]
+    for idx₀ in eachindex(input)
+        idx₁ = idx₀ < lastindex(input) ? nextind(input, idx₀) : firstindex(input)
+        x = input[idx₀]
+        y = input[idx₁]
+        if x.I[1] == y.I[1]
+            push!(vertical, (x.I[1], min(x.I[2], y.I[2]), max(x.I[2], y.I[2])))
+        elseif x.I[2] == y.I[2]
+            push!(horizontal, (x.I[2], min(x.I[1], y.I[1]), max(x.I[1], y.I[1])))
+        end
+    end
+    output = 0
+    for choice in sort(choices, rev=true)
+        x, y = choice[2]
+        if are_there_red_or_green(x, y)
+            output += choice[1]
+            break
+        end
+    end
+    @test output == 24
+end
+```
 
+```{julia}
+@testset "Day 9" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day9_input.txt"))
+    input = [CartesianIndex(parse.(Int, split(ln, ','))...) for ln in input]
+    choices = Tuple{Float64,NTuple{2,CartesianIndex}}[]
+    for idx₀ in firstindex(input):prevind(input, lastindex(input))
+        for idx₁ in nextind(input, idx₀):lastindex(input)
+            push!(choices, (area(input[idx₀], input[idx₁]), (input[idx₀], input[idx₁])))
+        end
+    end
+    @test first(first(findmax(choices))) == 4_777_409_595
+    horizontal = NTuple{3,Int}[]
+    vertical = NTuple{3,Int}[]
+    for idx₀ in eachindex(input)
+        idx₁ = idx₀ < lastindex(input) ? nextind(input, idx₀) : firstindex(input)
+        x = input[idx₀]
+        y = input[idx₁]
+        if x.I[1] == y.I[1]
+            push!(vertical, (x.I[1], min(x.I[2], y.I[2]), max(x.I[2], y.I[2])))
+        elseif x.I[2] == y.I[2]
+            push!(horizontal, (x.I[2], min(x.I[1], y.I[1]), max(x.I[1], y.I[1])))
+        end
+    end
+    output = 0
+    for choice in sort(choices, rev=true)
+        x, y = choice[2]
+        if are_there_red_or_green(x, y)
+            output += choice[1]
+            break
+        end
+    end
+    @test output == 1_473_551_379
+end
+```
+
+# Day 10
+
+```{julia}
+input = readlines(joinpath(DIR_PRJ, "data", "day10_input.txt"))
 ```
