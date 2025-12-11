@@ -53,6 +53,7 @@ using AoC25
 using Test
 using Unicode
 using Intervals
+using Combinatorics
 ```
 
 # Day 1
@@ -612,5 +613,120 @@ end
 # Day 10
 
 ```{julia}
+struct Machine
+    lights :: BitVector
+    buttons :: Vector{BitVector}
+    joltage :: Vector{Int}
+    function Machine(input)
+        # input = inputs[1]
+        lights = "#" .== graphemes(match(r"(?<=\[)(\.|#)+(?=\])", input).match)
+        buttons = [
+            [ parse(Int, elem.match) for elem in eachmatch(r"\d+", elem) ] .+ 1 for elem in split(match(r"(?<=\]\s)(.*)(?=\s\{)", input).match, " ")
+        ]
+        buttons = [ eachindex(lights) .∈ Ref(elem) for elem in buttons ]
+        joltage = [ parse(Int, elem.match) for elem in eachmatch(r"\d+", match(r"(?<=\{).*", input).match) ]
+        new(lights, buttons, joltage)
+    end
+end
+function turn_machine_on(machine)
+    lights = machine.lights
+    buttons = machine.buttons
+    n = 1
+    while true
+        choices = combinations(buttons, n)
+        any(lights == (reduce(+, choice) .% 2) for choice in choices) && return n
+        n += 1
+    end
+end
+function calibrate_machine(machine)
+    machine = machines[1]
+    buttons = machine.buttons
+    joltage = machine.joltage
+    spots = Vector{Int}[]
+    for idx in eachindex(joltage)
+        spot = Int[]
+        for button in eachindex(buttons)
+            if buttons[button][idx]
+                push!(spot, button)
+            end
+        end
+        push!(spots, spot)
+    end
+    x₀ = [ minimum(joltage[buttons[idx]]) for idx in eachindex(buttons) ]
+    # x₊ = [ maximum(joltage[buttons[idx]]) for idx in eachindex(buttons) ]
+    potentials = Vector{Vector{Int}}[]
+    for idx in eachindex(buttons)
+        # idx = 1
+        n = x₀[idx]
+        m = maximum(length(spot) for spot in spots if idx ∈ spot)
+        push!(potentials, collect(partitions(n, m)))
+    end
+    potentials_clean = [ unique!(vcat(0, sort!(reduce(union, elem)))) for elem in potentials ]
+    potentials_clean = [ 0:maximum(reduce(union, elem)) for elem in potentials ]
+    potentials_clean[1]
+    for i in chk = reduce(Iterators.product, potentials_clean)
+        idx_ = ones(Int, size(buttons))
+        β = zeros(Int, size(buttons))
+        while true
+            idx = 
+        end
+        println(i)
+    end
+
+    β = zero(joltage)
+    while true
+        for 
+        
+    end
+
+    x = [ 1:x for x in x₊ ]
+    combinations(x, 6)
+    reduce(hcat, buttons) * [1, 1, 1, 1, 1, 1]
+    joltage
+    sum(x₀)
+    sum(x₊)
+    candidates = Vector{Int}[]
+    for button in buttons
+        append!(candidates, fill(button, minimum(joltage[button])))
+    end
+    sort!(candidates)
+
+
+    extrema(length(spot) for spot in filter(idx -> idx ∈ spot) for idx in eachindex(joltage) )
+
+
+    β = reduce(hcat, buttons) \ joltage
+    candidates = Vector{Int}[]
+    for button in buttons
+        append!(candidates, fill(button, Int(minimum(filter(isfinite, joltage ./ button)))))
+    end
+    n = 1
+    while true
+        choices = combinations(buttons, n)
+        for choice in choices
+            result = reduce(+, choice) - joltage
+            any(>(0), result) && continue
+            all(iszero, result) && return n
+        end
+        n += 1
+    end
+end
+inputs = split(
+    """
+    [.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+    [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
+    [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}""",
+    '\n'
+)
+machines = Machine.(inputs)
+output = turn_machine_on.(machines)
+@test sum(output) == 7
+output = calibrate_machine.(machines)
+```
+
+```{julia}
 input = readlines(joinpath(DIR_PRJ, "data", "day10_input.txt"))
+machines = Machine.(input)
+output = turn_machine_on.(machines)
+@test sum(output)
 ```

@@ -2,10 +2,10 @@
 
 julia_version = "1.12.2"
 manifest_format = "2.0"
-project_hash = "3e613f2feeafdb73d316d6032e07808ed7a643d3"
+project_hash = "9c8173f9282ed8c5cf1de4f36d84f403de21da2d"
 
 [[deps.AoC25]]
-deps = ["Unicode"]
+deps = ["Intervals", "Unicode"]
 path = "."
 uuid = "ff143683-340d-441b-8c9d-b0176b6adda3"
 version = "0.1.0"
@@ -17,6 +17,11 @@ version = "1.1.2"
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 version = "1.11.0"
+
+[[deps.Combinatorics]]
+git-tree-sha1 = "8010b6bb3388abe68d95743dcbea77650bb2eddf"
+uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+version = "1.0.3"
 
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
