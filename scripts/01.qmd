@@ -54,6 +54,8 @@ using Test
 using Unicode
 using Intervals
 using Combinatorics
+using Satisfiability
+using Graphs
 ```
 
 # Day 1
@@ -639,94 +641,109 @@ function turn_machine_on(machine)
     end
 end
 function calibrate_machine(machine)
-    machine = machines[1]
+    # machine = machines[1]
     buttons = machine.buttons
     joltage = machine.joltage
-    spots = Vector{Int}[]
-    for idx in eachindex(joltage)
-        spot = Int[]
-        for button in eachindex(buttons)
-            if buttons[button][idx]
-                push!(spot, button)
-            end
-        end
-        push!(spots, spot)
+    interactive_solver = open(Z3())
+    @satvariable(a[1:length(buttons)], Int)
+    constrs = []
+    # non-negativity (and optional upper bounds)
+    for idx in eachindex(a)
+        push!(constrs, a[idx] >= 0)
     end
-    x₀ = [ minimum(joltage[buttons[idx]]) for idx in eachindex(buttons) ]
-    # x₊ = [ maximum(joltage[buttons[idx]]) for idx in eachindex(buttons) ]
-    potentials = Vector{Vector{Int}}[]
-    for idx in eachindex(buttons)
-        # idx = 1
-        n = x₀[idx]
-        m = maximum(length(spot) for spot in spots if idx ∈ spot)
-        push!(potentials, collect(partitions(n, m)))
+    for i in eachindex(joltage)
+        idxs = [j for j in eachindex(buttons) if buttons[j][i]]
+        push!(constrs, sum(a[idxs]) == joltage[i])
     end
-    potentials_clean = [ unique!(vcat(0, sort!(reduce(union, elem)))) for elem in potentials ]
-    potentials_clean = [ 0:maximum(reduce(union, elem)) for elem in potentials ]
-    potentials_clean[1]
-    for i in chk = reduce(Iterators.product, potentials_clean)
-        idx_ = ones(Int, size(buttons))
-        β = zeros(Int, size(buttons))
-        while true
-            idx = 
-        end
-        println(i)
-    end
-
-    β = zero(joltage)
-    while true
-        for 
-        
-    end
-
-    x = [ 1:x for x in x₊ ]
-    combinations(x, 6)
-    reduce(hcat, buttons) * [1, 1, 1, 1, 1, 1]
-    joltage
-    sum(x₀)
-    sum(x₊)
-    candidates = Vector{Int}[]
-    for button in buttons
-        append!(candidates, fill(button, minimum(joltage[button])))
-    end
-    sort!(candidates)
-
-
-    extrema(length(spot) for spot in filter(idx -> idx ∈ spot) for idx in eachindex(joltage) )
-
-
-    β = reduce(hcat, buttons) \ joltage
-    candidates = Vector{Int}[]
-    for button in buttons
-        append!(candidates, fill(button, Int(minimum(filter(isfinite, joltage ./ button)))))
-    end
-    n = 1
-    while true
-        choices = combinations(buttons, n)
-        for choice in choices
-            result = reduce(+, choice) - joltage
-            any(>(0), result) && continue
-            all(iszero, result) && return n
-        end
+    n = maximum(joltage)
+    status = true
+    while status
+        expr = and(constrs..., sum(a) == n)
+        status, res = sat!(interactive_solver, expr)
+        status = status ≠ :SAT
         n += 1
     end
+    close(interactive_solver)
+    sum(value(a))
 end
-inputs = split(
-    """
-    [.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
-    [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
-    [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}""",
-    '\n'
-)
-machines = Machine.(inputs)
-output = turn_machine_on.(machines)
-@test sum(output) == 7
-output = calibrate_machine.(machines)
 ```
 
 ```{julia}
-input = readlines(joinpath(DIR_PRJ, "data", "day10_input.txt"))
-machines = Machine.(input)
-output = turn_machine_on.(machines)
-@test sum(output)
+@testset "Day 10" begin
+    inputs = split(
+        """
+        [.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+        [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
+        [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}""",
+        '\n'
+    )
+    machines = Machine.(inputs)
+    output = turn_machine_on.(machines)
+    @test sum(output) == 7
+    output = calibrate_machine.(machines)
+    @test sum(output) == 33
+end
+```
+
+```{julia}
+@testset "Day 10" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day10_input.txt"))
+    machines = Machine.(input)
+    output = turn_machine_on.(machines)
+    @test sum(output) == 436
+    output = calibrate_machine.(machines)
+    @test sum(output) == 14999
+end
+```
+
+# Day 11
+
+```{julia}
+input = """aaa: you hhh
+you: bbb ccc
+bbb: ddd eee
+ccc: ddd eee fff
+ddd: ggg
+eee: out
+fff: out
+ggg: out
+hhh: ccc fff iii
+iii: out"""
+input = split(input, '\n')
+input = Dict(
+    match(r"^\p{l}{3}", ln).match => collect(m.match for m in eachmatch(r"(\p{l}{3})", replace(ln, r"^\p{l}{3}\:\s" => "")))
+    for ln in input
+)
+k = sort!(unique!(append!(collect(keys(input)), reduce(union, values(input)))))
+mapper = Dict(k[idx] => idx for idx in eachindex(k))
+# mapper_ = Dict(v => k for (k, v) in mapper)
+g = DiGraph(length(k))
+for (k, v) in input
+    for elem in v
+        add_edge!(g, mapper[k], mapper[elem])
+    end
+end
+
+has_path()
+
+visited = Int[]
+output = 0
+next_node = unique(outneighbors(g, findfirst(isequal("you"), k)))
+edges(g, findfirst(isequal("you"), k))
+while !isempty(next_node)
+    for next_node_adv in next_node
+        if next_node_adv == findfirst(isequal("out"), k)
+            output += 1
+        else
+            append!(next_node, unique(outneighbors(g, next_node_adv)))
+        end
+        push!(visited, next_node_adv)
+    end
+    next_node = setdiff(next_node, visited)
+end
+
+
+
+dijkstra_shortest_paths(g, srcs, distmx=weights(g));
+count(>(0), dijkstra_shortest_paths(g, findfirst(isequal("you"), k)).pathcounts)
 ```
