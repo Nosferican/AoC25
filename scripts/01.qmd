@@ -723,6 +723,24 @@ for (k, v) in input
         add_edge!(g, mapper[k], mapper[elem])
     end
 end
+cache_out = Dict(findfirst(isequal("out"), k) => 1)
+function n_paths!(cache, src, desto)
+    if src == desto
+        1
+    else
+        if haskey(cache, src)
+            cache[src]
+        else
+            xxx = outneighbors(g, src)
+            if !isempty(xxx)
+                cache[src] = sum(n_paths!(cache, s, desto) for s in xxx)
+            end
+            0
+        end
+    end
+end
+n_paths!(cache_out, findfirst(isequal("you"), k), findfirst(isequal("out"), k))
+
 output = 0
 finaldest = Int[]
 visited = Int[]
@@ -754,6 +772,75 @@ for (k, v) in input
         add_edge!(g, mapper[k], mapper[elem])
     end
 end
+svr = findfirst(isequal("svr"), k)
+dac = findfirst(isequal("dac"), k)
+fft = findfirst(isequal("fft"), k)
+out = findfirst(isequal("out"), k)
+cache_out = Dict(out => 1)
+cache_dac = Dict(dac => 1)
+cache_fft = Dict(fft => 1)
+svr_dac = n_paths!(cache_dac, svr, dac)
+
+sum(elem for elem in Int[])
+
+function dfs(g, src)
+
+end
+
+output = 0
+
+
+
+for p in all_simple_paths(g, dsp_svr, dsp_out)
+    println(p)
+    output += 1
+    output > 3 && break
+end
+output
+
+out_connections = outneighbors.(Ref(g), eachindex(k))
+in_connections = inneighbors.(Ref(g), eachindex(k))
+in_connections_n = length.(in_connections)
+in_connections_n[dsp_out]
+
+
+
+dsp = dijkstra_shortest_paths(g, findall(∈(["svr", "dac", "fft"]), k));
+dsp.dists
+
+
+
+
+count(>(0), dsp_svr.dists)
+count(>(0), dsp_dac.dists)
+count(>(0), dsp_fft.dists)
+findfirst(isequal("svr"), k)
+svr = findfirst(isequal("svr"), k)
+out = findfirst(isequal("out"), k)
+dac = findfirst(isequal("dac"), k)
+fft = findfirst(isequal("fft"), k)
+# svr to fft
+svr2dac = yen_k_shortest_paths(g, svr, dac, weights(g), 2_000);
+svr2fft = yen_k_shortest_paths(g, svr, fft, weights(g), length(k));
+dac2fft = yen_k_shortest_paths(g, dac, fft, weights(g), length(k));
+fft2dac = yen_k_shortest_paths(g, fft, dac, weights(g), length(k));
+dac2out = yen_k_shortest_paths(g, dac, out, weights(g), length(k));
+fft2out = yen_k_shortest_paths(g, fft, out, weights(g), length(k));
+
+maximum(length, svr2dac.paths)
+filter(x -> dac ∉ x, svr2fft.paths)
+
+svr_dac_fft_out = 
+
+struct SvrOutPath
+    cur :: Int
+    dac :: Bool
+    fft :: Bool
+    visited :: Int[]
+    function SvrOutPath(cur, dac, fft)
+    end
+end
+
 output = 0
 finaldest = Int[]
 visited = Int[]
