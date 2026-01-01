@@ -1,0 +1,780 @@
+---
+title: "Inputs from the national economic accounts"
+author:
+  - id: jbsc
+    given: José Bayoán
+    family: Santiago Calderón
+    orcid: 0000-0002-8406-6175
+    email: Jose.Santiago-Calderon@bea.gov
+    degrees:
+      - PhD
+    affiliations:
+      - name: Bureau of Economic Analysis
+        group: Analysis and Research Group
+        department: National Economic Accounts
+        city: Suitland
+        state: MD
+        country: USA
+        postal-code: 20746
+        url: https://www.bea.gov
+        ror: https://ror.org/03b17a012
+        ringgold: 17145
+        isni: 0000000101060898
+date: today
+date-format: iso
+format:
+  html: 
+    code-fold: true
+    self-contained: true
+    smooth-scroll: true
+    html-math-method: katex
+engine: julia
+abstract: |
+	Avent of Code 2025.
+keywords:
+  - Advent of Code
+license:
+  text: >
+	
+  type: open-access
+  url: 
+---
+
+We start by instantiating the environment.
+
+```{julia}
+const DIR_PRJ = string(strip(read(`git rev-parse --show-toplevel`, String)))
+using Pkg
+Pkg.activate(DIR_PRJ)
+```
+
+```{julia}
+using AoC25
+using Test
+using Unicode: graphemes
+using Intervals
+using Combinatorics
+using Satisfiability
+using Graphs
+```
+
+# Day 1
+
+```{julia}
+@testset "Day 1" begin
+	input = ["L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99", "R14", "L82"]
+	output = [50]
+	n = 0
+	for x in input
+		newpos, times_at_zero = Day1.rotate(last(output), x)
+		push!(output, newpos)
+		n += times_at_zero
+	end
+	@test output == [50, 82, 52, 0, 95, 55, 0, 99, 0, 14, 32]
+	@test count(iszero, output) == 3
+	@test n == 6
+end
+```
+
+```{julia}
+begin
+	input = readlines(joinpath(DIR_PRJ, "data", "day1_input.txt"))
+	output = [50]
+	n = 0
+	for x in input
+		newpos, times_at_zero = Day1.rotate(last(output), x)
+		push!(output, newpos)
+		n += times_at_zero
+	end
+	count(iszero, output), n
+end
+```
+
+# Day 2
+
+```{julia}
+@testset begin
+	input = split(
+		"11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124",
+		','
+	)
+	input = [ range(parse.(Int, split(elem, '-'))...) for elem in input ]
+	output = [ filter(Day2.isinvalid, elem) for elem in input ]
+	@test length.(output) == [2, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0]
+	@test sum(sum(elem) for elem in output) == 1227775554
+	output = [ filter(Day2.isinvalid_, elem) for elem in input ]
+	@test sum(sum(elem) for elem in output) == 4174379265
+end
+```
+
+```{julia}
+begin
+	input = split(only(readlines(joinpath(DIR_PRJ, "data", "day2_input.txt"))), ',')
+	input = [ range(parse.(Int, split(elem, '-'))...) for elem in input ]
+	output_a = [ filter(Day2.isinvalid, elem) for elem in input ]
+	output_b = [ filter(Day2.isinvalid_, elem) for elem in input ]
+	sum(sum(elem) for elem in output_a), sum(sum(elem) for elem in output_b)
+end
+```
+
+# Day 3
+
+```{julia}
+@testset begin
+	input = split("987654321111111\n811111111111119\n234234234234278\n818181911112111")
+	# input = input[4]
+	output = largestjoltage.(input, 2)
+	@test output == [98, 89, 78, 92]
+	@test sum(output) == 357
+	output = largestjoltage.(input, 12)
+	@test output == [987654321111, 811111111119, 434234234278, 888911112111]
+	@test sum(output) == 3121910778619
+end
+```
+
+```{julia}
+begin
+	input = readlines(joinpath(DIR_PRJ, "data", "day3_input.txt"))
+	output = largestjoltage.(input, 12)
+	sum(output)
+end
+```
+
+# Day 4
+
+```{julia}
+@testset begin
+	input = "..@@.@@@@.\n@@@.@.@.@@\n@@@@@.@.@@\n@.@@@@..@.\n@@.@@@@.@@\n.@@@@@@@.@\n.@.@.@.@@@\n@.@@@.@@@@\n.@@@@@@@@.\n@.@.@@@.@."
+	input₀ = convert(Matrix{Bool}, reduce(vcat, permutedims([ gm == "@" for gm in graphemes(ln) ]) for ln in split(input, '\n')))
+	input = copy(input₀)
+	to_remove = AoC25.Day4.accesible(input₀)
+	@test length(to_remove) == 13
+	while !isempty(to_remove)
+		for idx in to_remove
+			input[idx] = false
+		end
+		to_remove = AoC25.Day4.accesible(input)
+	end
+	@test sum(input₀) - sum(input) == 43
+end
+```
+
+```{julia}
+	input = convert(BitMatrix, reduce(vcat, permutedims([ gm == "@" for gm in graphemes(ln) ]) for ln in split(input, '\n')))
+	neighborhood = 0
+	for idx₀ in findall(input)
+		x₀, y₀ = idx₀.I
+		neighbors = CartesianIndex[]
+		for idx₁ in findall(input)
+			x₁, y₁ = idx₁.I
+			d = (x₀ - x₁)^2 + (y₀ - y₁)^2
+			if d ∈ 1:2
+				push!(neighbors, idx₁)
+			end
+		end
+		if length(neighbors) < 4
+			neighborhood += 1
+		end
+	end
+	neighbors = [ elem ]
+end
+```
+
+# Day 5
+
+```{julia}
+@testset " " begin
+	input = split("3-5\n10-14\n16-20\n12-18\n\n1\n5\n8\n11\n17\n32", '\n')
+	ranges = [
+		UnitRange(parse.(Int, split(elem, '-'))...) for elem in input[1:findfirst(isempty, input) - 1]
+	]
+	ingridients = [ parse(Int, elem) for elem in input[findfirst(isempty, input) + 1:end] ]
+	fresh = filter(x -> any(range -> x ∈ range, ranges), ingridients)
+	length(fresh) == 13
+end
+```
+
+```{julia}
+begin
+	input = readlines(joinpath(DIR_PRJ, "data", "day5_input.txt"))
+	ranges = [
+		UnitRange(parse.(Int, split(elem, '-'))...) for elem in input[1:findfirst(isempty, input) - 1]
+	]
+	ingridients = [ parse(Int, elem) for elem in input[findfirst(isempty, input) + 1:end] ]
+	fresh = filter(x -> any(range -> x ∈ range, ranges), ingridients)
+	intervals = [ Interval{Closed,Closed}(elem.start, elem.stop) for elem in ranges ]
+	sum(elem -> length(UnitRange{Int}(elem.first:elem.last)), union(intervals))
+end
+```
+
+# Day 6
+
+```{julia}
+@testset "Day 6" begin
+	input = split("123 328  51 64 \n 45 64  387 23 \n  6 98  215 314\n*   +   *   +  ", '\n')
+	input_ops = split(input[end], r"\s+")[1:end - 1] .== "+"
+	input_vals = reduce(vcat, permutedims(parse.(Int, split(strip(ln), r"\s+"))) for ln in input[1:end - 1])
+	@test sum(input_ops[col] ? sum(input_vals[:,col]) : prod(input_vals[:,col]) for col in eachindex(input_ops)) == 4277556
+	lns = collect.(graphemes.(input))
+	lns = [ join(getindex.(lns[1:end - 1], col)) for col in eachindex(lns[1]) ]
+	output = Vector{Int}[]
+	tmp = Int[]
+	for ln in lns
+		if contains(ln, r"^\s+$")
+			push!(output, copy(tmp))
+			empty!(tmp)
+		else
+			push!(tmp, parse(Int, ln))
+		end
+	end
+	push!(output, copy(tmp))
+	@test sum(input_ops[col] ? sum(output[col]) : prod(output[col]) for col in eachindex(input_ops)) == 3263827
+end
+```
+
+```{julia}
+@testset begin
+	input = readlines(joinpath(DIR_PRJ, "data", "day6_input.txt"))
+	input_ops = split(input[end], r"\s+")[1:end - 1] .== "+"
+	input_vals = reduce(vcat, permutedims(parse.(Int, split(strip(ln), r"\s+"))) for ln in input[1:end - 1])
+	@test sum(input_ops[col] ? sum(input_vals[:,col]) : prod(input_vals[:,col]) for col in eachindex(input_ops)) == 4719804927602
+	lns = collect.(graphemes.(input))
+	lns = [ join(getindex.(lns[1:end - 1], col)) for col in eachindex(lns[1]) ]
+	output = Vector{Int}[]
+	tmp = Int[]
+	for ln in lns
+		if contains(ln, r"^\s+$")
+			push!(output, copy(tmp))
+			empty!(tmp)
+		else
+			push!(tmp, parse(Int, ln))
+		end
+	end
+	push!(output, copy(tmp))
+	@test sum(input_ops[col] ? sum(output[col]) : prod(output[col]) for col in eachindex(input_ops)) == 9608327000261
+end
+```
+
+# Day 7
+
+```{julia}
+function solve!(queue, input)
+	pos = first(queue)
+	row, col = pos.I
+	manifold = findfirst(isequal("^"), @view(input[pos.I[1] + 1:end, pos.I[2]]))
+	if isnothing(manifold)
+		return 1
+	end
+	if pos.I[2] > 1
+		push!(queue, CartesianIndex(manifold + row + 1, pos.I[2] - 1))
+	end
+	if pos.I[2] < size(input, 2)
+		push!(queue, CartesianIndex(manifold + row + 1, pos.I[2] + 1))
+	end
+	popfirst!(queue)
+	return 0
+end
+# queue = [findfirst(isequal("S"), input)]
+# sol = 0
+# while !isempty(queue)
+# 	sol += solve!(queue, input)
+# end
+# sol
+struct State
+	# input :: Matrix{String}
+	left :: Union{Nothing,State}
+	right :: Union{Nothing,State}
+	function State(input)
+		S = findall(contains(r"(S|\|)"), input)
+		row = maximum(first(elem.I) for elem in S)
+		pos = only(filter!(elem -> first(elem.I) == row, S))
+		manifold = findfirst(isequal("^"), @view(input[row + 1:end, pos.I[2]]))
+		manifold == size(input, 1) && return new(nothing, nothing)
+		State(input, pos.I[2])
+	end
+	function State(input, pos::Integer)
+		# pos = 8
+		manifold = findfirst(isequal("^"), @view(input[:, pos]))
+		isnothing(manifold) && return new(nothing, nothing)
+		if pos > 1 & pos < size(input, 2)
+			left = State(@view(input[manifold + 1:end,:]), pos - 1)
+			right = State(@view(input[manifold + 1:end,:]), pos + 1)
+			return new(left, right)
+		elseif pos > 1
+			left = State(@view(input[manifold + 1:end,:]), pos - 1)
+			return new(left, nothing)
+		elseif pos < size(input, 2)
+			right = State(@view(input[manifold + 1:end,:]), pos + 1)
+			return new(nothing, right)
+		else
+			throw(ErrorException("This shouldn't happen!"))
+		end
+	end
+end
+function count_states(state)
+	if isnothing(state.left) & isnothing(state.right)
+		1
+	elseif isnothing(state.right)
+		count_states(state.left)
+	elseif isnothing(state.left)
+		count_states(state.right)
+	else
+		count_states(state.left) + count_states(state.right)
+	end
+end
+```
+
+```{julia}
+@testset "Day 7" begin
+    input = """
+    .......S.......
+    ...............
+    .......^.......
+    ...............
+    ......^.^......
+    ...............
+    .....^.^.^.....
+    ...............
+    ....^.^...^....
+    ...............
+    ...^.^...^.^...
+    ...............
+    ..^...^.....^..
+    ...............
+    .^.^.^.^.^...^.
+    ..............."""
+    input = reduce(vcat, permutedims(split(ln, "")) for ln in split(input, '\n'))
+    input_ = copy(input)
+    val = zeros(Int, size(input))
+    input[2, findfirst(isequal("S"), input[1, :])] = "|"
+    val[2, findfirst(isequal("S"), input[1, :])] = 1
+    x = 0
+    for row in 2:2:(size(input, 1)-2)
+        hasbeam = findall(isequal("|"), input[row, :])
+        for beam in hasbeam
+            if input[row+1, beam] == "."
+                input[row+2, beam] = "|"
+                val[row+2, beam] += val[row, beam]
+            elseif input[row+1, beam] == "^"
+                x += 1
+                if beam > 1
+                    input[row+2, beam-1] = "|"
+                    val[row+2, beam-1] += val[row, beam]
+                end
+                if beam < size(input, 2)
+                    input[row+2, beam+1] = "|"
+                    val[row+2, beam+1] += val[row, beam]
+                end
+            end
+        end
+    end
+    reduce(vcat, join(row, "") for row in eachrow(input))
+    @test x == 21
+    @test sum(val[end, :]) == 40
+end
+```
+
+```{julia}
+@testset "Day 7" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day7_input.txt"))
+    input = reduce(vcat, permutedims(split(ln, "")) for ln in input)
+    input_ = copy(input)
+    val = zeros(Int, size(input))
+    input[2, findfirst(isequal("S"), input[1, :])] = "|"
+    val[2, findfirst(isequal("S"), input[1, :])] = 1
+    x = 0
+    for row in 2:2:(size(input, 1)-2)
+        hasbeam = findall(isequal("|"), input[row, :])
+        for beam in hasbeam
+            if input[row+1, beam] == "."
+                input[row+2, beam] = "|"
+                val[row+2, beam] += val[row, beam]
+            elseif input[row+1, beam] == "^"
+                x += 1
+                if beam > 1
+                    input[row+2, beam-1] = "|"
+                    val[row+2, beam-1] += val[row, beam]
+                end
+                if beam < size(input, 2)
+                    input[row+2, beam+1] = "|"
+                    val[row+2, beam+1] += val[row, beam]
+                end
+            end
+        end
+    end
+    reduce(vcat, join(row, "") for row in eachrow(input))
+    @test x == 1690
+    @test sum(val[end, :]) == 221_371_496_188_107
+end
+```
+
+# Day 8
+
+```{julia}
+@testset "Day 8" begin
+    input = """162,817,812
+    57,618,57
+    906,360,560
+    592,479,940
+    352,342,300
+    466,668,158
+    542,29,236
+    431,825,988
+    739,650,466
+    52,470,668
+    216,146,977
+    819,987,18
+    117,168,530
+    805,96,715
+    346,949,466
+    970,615,88
+    941,993,340
+    862,61,35
+    984,92,344
+    425,690,689"""
+    input = split(input, '\n')
+    input = [parse.(Int, split(ln, ',')) for ln in input]
+    dist(a, b) = sum(abs2, a - b)
+    d = Tuple{Float64,Tuple{Int64,Int64}}[]
+    for a in 1:(length(input)-1)
+        for b in (a+1):length(input)
+            push!(d, (dist(input[a], input[b]), (a, b)))
+        end
+    end
+    sort!(d)
+    d = last.(d)
+    circuits = [Set(elem) for elem in eachindex(input)]
+    for elem in d[1:10]
+        # elem = d[1]
+        a, b = elem
+        x = findfirst(circuit -> a ∈ circuit, circuits)
+        y = findfirst(circuit -> b ∈ circuit, circuits)
+        if x ≠ y
+            union!(circuits[x], circuits[y])
+            deleteat!(circuits, y)
+        end
+    end
+    @test prod(sort!(length.(circuits), rev=true)[1:3]) == 40
+end
+```
+
+```{julia}
+@testset "Day 8" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day8_input.txt"))
+    input = [parse.(Int, split(ln, ',')) for ln in input]
+    dist(a, b) = sum(abs2, a - b)
+    d = Tuple{Float64,Tuple{Int64,Int64}}[]
+    for a in 1:(length(input)-1)
+        for b in (a+1):length(input)
+            push!(d, (dist(input[a], input[b]), (a, b)))
+        end
+    end
+    sort!(d)
+    d = last.(d)
+    circuits = [Set(elem) for elem in eachindex(input)]
+    for elem in d[1:1000]
+        a, b = elem
+        x = findfirst(circuit -> a ∈ circuit, circuits)
+        y = findfirst(circuit -> b ∈ circuit, circuits)
+        if x ≠ y
+            union!(circuits[x], circuits[y])
+            deleteat!(circuits, y)
+        end
+    end
+    @test prod(sort!(length.(circuits), rev=true)[1:3]) == 115_885
+    output = 0
+    for elem in d[1001:end]
+        a, b = elem
+        x = findfirst(circuit -> a ∈ circuit, circuits)
+        y = findfirst(circuit -> b ∈ circuit, circuits)
+        if x ≠ y
+            union!(circuits[x], circuits[y])
+            deleteat!(circuits, y)
+        end
+        if length(circuits) == 1
+            output += (input[a][1] * input[b][1])
+            break
+        end
+    end
+    @test output == 274_150_525
+end
+```
+
+# Day 9
+
+```{julia}
+function area(x, y)
+	x₀, y₀ = x.I
+	x₁, y₁ = y.I
+	x = abs(x₁ - x₀) + 1
+	y = abs(y₁ - y₀) + 1
+	x * y
+end
+function are_there_red_or_green(x, y)
+	x₀, y₀ = x.I
+	x₁, y₁ = y.I
+	x₋, x₊ = sort([x₀, x₁])
+	y₋, y₊ = sort([y₀, y₁])
+	top = filter(elem -> elem[1] ≤ y₋, horizontal)
+	isempty(top) && return false
+	top = union([Interval(elem[2], elem[3]) for elem in top])
+	top = any(elem -> (elem.first ≤ x₋) & (elem.last ≥ x₊), top)
+	bottom = filter(elem -> elem[1] ≥ y₊, horizontal)
+	isempty(bottom) && return false
+	bottom = union([Interval(elem[2], elem[3]) for elem in bottom])
+	bottom = any(elem -> (elem.first ≤ x₋) & (elem.last ≥ x₊), bottom)
+	left = filter(elem -> elem[1] ≤ x₋, vertical)
+	isempty(left) && return false
+	left = union([Interval(elem[2], elem[3]) for elem in left])
+	left = any(elem -> (elem.first ≤ y₋) & (elem.last ≥ y₊), left)
+	right = filter(elem -> elem[1] ≥ x₊, vertical)
+	isempty(right) && return false
+	right = union([Interval(elem[2], elem[3]) for elem in right])
+	right = any(elem -> (elem.first ≤ y₋) & (elem.last ≥ y₊), right)
+	top & bottom & left & right
+end
+```
+
+```{julia}
+@testset "Day 9" begin
+    input = """7,1
+    11,1
+    11,7
+    9,7
+    9,5
+    2,5
+    2,3
+    7,3"""
+    input = [CartesianIndex(parse.(Int, split(ln, ','))...) for ln in split(input, '\n')]
+    choices = Tuple{Float64,NTuple{2,CartesianIndex}}[]
+    for idx₀ in firstindex(input):prevind(input, lastindex(input))
+        for idx₁ in nextind(input, idx₀):lastindex(input)
+            push!(choices, (area(input[idx₀], input[idx₁]), (input[idx₀], input[idx₁])))
+        end
+    end
+    @test first(first(findmax(choices))) == 50
+    horizontal = NTuple{3,Int}[]
+    vertical = NTuple{3,Int}[]
+    for idx₀ in eachindex(input)
+        idx₁ = idx₀ < lastindex(input) ? nextind(input, idx₀) : firstindex(input)
+        x = input[idx₀]
+        y = input[idx₁]
+        if x.I[1] == y.I[1]
+            push!(vertical, (x.I[1], min(x.I[2], y.I[2]), max(x.I[2], y.I[2])))
+        elseif x.I[2] == y.I[2]
+            push!(horizontal, (x.I[2], min(x.I[1], y.I[1]), max(x.I[1], y.I[1])))
+        end
+    end
+    output = 0
+    for choice in sort(choices, rev=true)
+        x, y = choice[2]
+        if are_there_red_or_green(x, y)
+            output += choice[1]
+            break
+        end
+    end
+    @test output == 24
+end
+```
+
+```{julia}
+@testset "Day 9" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day9_input.txt"))
+    input = [CartesianIndex(parse.(Int, split(ln, ','))...) for ln in input]
+    choices = Tuple{Float64,NTuple{2,CartesianIndex}}[]
+    for idx₀ in firstindex(input):prevind(input, lastindex(input))
+        for idx₁ in nextind(input, idx₀):lastindex(input)
+            push!(choices, (area(input[idx₀], input[idx₁]), (input[idx₀], input[idx₁])))
+        end
+    end
+    @test first(first(findmax(choices))) == 4_777_409_595
+    horizontal = NTuple{3,Int}[]
+    vertical = NTuple{3,Int}[]
+    for idx₀ in eachindex(input)
+        idx₁ = idx₀ < lastindex(input) ? nextind(input, idx₀) : firstindex(input)
+        x = input[idx₀]
+        y = input[idx₁]
+        if x.I[1] == y.I[1]
+            push!(vertical, (x.I[1], min(x.I[2], y.I[2]), max(x.I[2], y.I[2])))
+        elseif x.I[2] == y.I[2]
+            push!(horizontal, (x.I[2], min(x.I[1], y.I[1]), max(x.I[1], y.I[1])))
+        end
+    end
+    output = 0
+    for choice in sort(choices, rev=true)
+        x, y = choice[2]
+        if are_there_red_or_green(x, y)
+            output += choice[1]
+            break
+        end
+    end
+    @test output == 1_473_551_379
+end
+```
+
+# Day 10
+
+```{julia}
+struct Machine
+    lights :: BitVector
+    buttons :: Vector{BitVector}
+    joltage :: Vector{Int}
+    function Machine(input)
+        # input = inputs[1]
+        lights = "#" .== graphemes(match(r"(?<=\[)(\.|#)+(?=\])", input).match)
+        buttons = [
+            [ parse(Int, elem.match) for elem in eachmatch(r"\d+", elem) ] .+ 1 for elem in split(match(r"(?<=\]\s)(.*)(?=\s\{)", input).match, " ")
+        ]
+        buttons = [ eachindex(lights) .∈ Ref(elem) for elem in buttons ]
+        joltage = [ parse(Int, elem.match) for elem in eachmatch(r"\d+", match(r"(?<=\{).*", input).match) ]
+        new(lights, buttons, joltage)
+    end
+end
+function turn_machine_on(machine)
+    lights = machine.lights
+    buttons = machine.buttons
+    n = 1
+    while true
+        choices = combinations(buttons, n)
+        any(lights == (reduce(+, choice) .% 2) for choice in choices) && return n
+        n += 1
+    end
+end
+function calibrate_machine(machine)
+    # machine = machines[1]
+    buttons = machine.buttons
+    joltage = machine.joltage
+    interactive_solver = open(Z3())
+    @satvariable(a[1:length(buttons)], Int)
+    constrs = []
+    # non-negativity (and optional upper bounds)
+    for idx in eachindex(a)
+        push!(constrs, a[idx] >= 0)
+    end
+    for i in eachindex(joltage)
+        idxs = [j for j in eachindex(buttons) if buttons[j][i]]
+        push!(constrs, sum(a[idxs]) == joltage[i])
+    end
+    n = maximum(joltage)
+    status = true
+    while status
+        expr = and(constrs..., sum(a) == n)
+        status, res = sat!(interactive_solver, expr)
+        status = status ≠ :SAT
+        n += 1
+    end
+    close(interactive_solver)
+    sum(value(a))
+end
+```
+
+```{julia}
+@testset "Day 10" begin
+    inputs = split(
+        """
+        [.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+        [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
+        [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}""",
+        '\n'
+    )
+    machines = Machine.(inputs)
+    output = turn_machine_on.(machines)
+    @test sum(output) == 7
+    output = calibrate_machine.(machines)
+    @test sum(output) == 33
+end
+```
+
+```{julia}
+@testset "Day 10" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day10_input.txt"))
+    machines = Machine.(input)
+    output = turn_machine_on.(machines)
+    @test sum(output) == 436
+    output = calibrate_machine.(machines)
+    @test sum(output) == 14999
+end
+```
+
+# Day 11
+
+```{julia}
+@testset "Day 11 Part 1" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day11_input.txt"))
+    input = Dict(
+        match(r"^\p{l}{3}", ln).match => collect(m.match for m in eachmatch(r"(\p{l}{3})", replace(ln, r"^\p{l}{3}\:\s" => "")))
+        for ln in input
+    )
+    k = sort!(unique!(append!(collect(keys(input)), reduce(union, values(input)))))
+    mapper = Dict(k[idx] => idx for idx in eachindex(k))
+    g = DiGraph(length(k))
+    for (k, v) in input
+        for elem in v
+            add_edge!(g, mapper[k], mapper[elem])
+        end
+    end
+    you = findfirst(isequal("you"), k)
+    out = findfirst(isequal("out"), k)
+    am_g = adjacency_matrix(g)
+    P = sum(am_g^n for n in 1:(size(g, 1) - 1))
+    @test P[you, out] == 599
+end
+```
+
+```{julia}
+@testset "Day 11 Part 2" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day11_input.txt"))
+    input = Dict(
+        match(r"^\p{l}{3}", ln).match => collect(m.match for m in eachmatch(r"(\p{l}{3})", replace(ln, r"^\p{l}{3}\:\s" => "")))
+        for ln in input
+    )
+    k = sort!(unique!(append!(collect(keys(input)), reduce(union, values(input)))))
+    mapper = Dict(k[idx] => idx for idx in eachindex(k))
+    g = DiGraph(length(k))
+    for (k, v) in input
+        for elem in v
+            add_edge!(g, mapper[k], mapper[elem])
+        end
+    end
+    svr = findfirst(isequal("svr"), k)
+    dac = findfirst(isequal("dac"), k)
+    fft = findfirst(isequal("fft"), k)
+    out = findfirst(isequal("out"), k)
+    am_g = adjacency_matrix(g)
+    P = sum(am_g^n for n in 1:(size(g, 1) - 1))
+    @test max(
+        P[svr, dac] * P[dac, fft] * P[fft, out],
+        P[svr, fft] * P[fft, dac] * P[dac, out]
+    ) == 393474305030400
+end
+```
+
+# Day 12
+
+```{julia}
+@testset "Day 12" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day12_input.txt"))
+    shapes = Matrix{Bool}[]
+    regions = Vector{Int}[]
+    idx = firstindex(input)
+    while idx < length(input)
+        if contains(input[idx], r"^(\d):$")
+            push!(
+                shapes,
+                reduce(
+                    vcat,
+                    permutedims(
+                        graphemes(input[x]) .== "#") for x in (idx+1):(idx+3)
+                )
+            )
+            idx += 4
+        elseif contains(input[idx], r"\d+")
+            push!(regions, [parse(Int, m.match) for m in eachmatch(r"\d+", input[idx])])
+            idx += 1
+        else
+            idx += 1
+        end
+    end
+    @test count(9sum(region[3:end]) ≤ reduce(*, region[1:2]) for region in regions) == 546
+end
+```
