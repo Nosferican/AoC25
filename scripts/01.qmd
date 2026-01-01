@@ -51,7 +51,7 @@ Pkg.activate(DIR_PRJ)
 ```{julia}
 using AoC25
 using Test
-using Unicode
+using Unicode: graphemes
 using Intervals
 using Combinatorics
 using Satisfiability
@@ -699,233 +699,82 @@ end
 # Day 11
 
 ```{julia}
-input = """aaa: you hhh
-you: bbb ccc
-bbb: ddd eee
-ccc: ddd eee fff
-ddd: ggg
-eee: out
-fff: out
-ggg: out
-hhh: ccc fff iii
-iii: out"""
-input = split(input, '\n')
-input = Dict(
-    match(r"^\p{l}{3}", ln).match => collect(m.match for m in eachmatch(r"(\p{l}{3})", replace(ln, r"^\p{l}{3}\:\s" => "")))
-    for ln in input
-)
-k = sort!(unique!(append!(collect(keys(input)), reduce(union, values(input)))))
-mapper = Dict(k[idx] => idx for idx in eachindex(k))
-# mapper_ = Dict(v => k for (k, v) in mapper)
-g = DiGraph(length(k))
-for (k, v) in input
-    for elem in v
-        add_edge!(g, mapper[k], mapper[elem])
-    end
-end
-cache_out = Dict(findfirst(isequal("out"), k) => 1)
-function n_paths!(cache, src, desto)
-    if src == desto
-        1
-    else
-        if haskey(cache, src)
-            cache[src]
-        else
-            xxx = outneighbors(g, src)
-            if !isempty(xxx)
-                cache[src] = sum(n_paths!(cache, s, desto) for s in xxx)
-            end
-            0
+@testset "Day 11 Part 1" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day11_input.txt"))
+    input = Dict(
+        match(r"^\p{l}{3}", ln).match => collect(m.match for m in eachmatch(r"(\p{l}{3})", replace(ln, r"^\p{l}{3}\:\s" => "")))
+        for ln in input
+    )
+    k = sort!(unique!(append!(collect(keys(input)), reduce(union, values(input)))))
+    mapper = Dict(k[idx] => idx for idx in eachindex(k))
+    g = DiGraph(length(k))
+    for (k, v) in input
+        for elem in v
+            add_edge!(g, mapper[k], mapper[elem])
         end
     end
-end
-n_paths!(cache_out, findfirst(isequal("you"), k), findfirst(isequal("out"), k))
-
-output = 0
-finaldest = Int[]
-visited = Int[]
-tovisit = outneighbors(g, findfirst(isequal("you"), k))
-while !isempty(tovisit)
-    for n in tovisit
-        dest = outneighbors(g, n)
-        if findfirst(isequal("out"), k) in dest
-            output += 1
-        end
-        append!(tovisit, dest)
-        push!(visited, n)
-    end
-    setdiff!(tovisit, visited)
+    you = findfirst(isequal("you"), k)
+    out = findfirst(isequal("out"), k)
+    am_g = adjacency_matrix(g)
+    P = sum(am_g^n for n in 1:(size(g, 1) - 1))
+    @test P[you, out] == 599
 end
 ```
 
 ```{julia}
-input = readlines(joinpath(DIR_PRJ, "data", "day11_input.txt"))
-input = Dict(
-    match(r"^\p{l}{3}", ln).match => collect(m.match for m in eachmatch(r"(\p{l}{3})", replace(ln, r"^\p{l}{3}\:\s" => "")))
-    for ln in input
-)
-k = sort!(unique!(append!(collect(keys(input)), reduce(union, values(input)))))
-mapper = Dict(k[idx] => idx for idx in eachindex(k))
-g = DiGraph(length(k))
-for (k, v) in input
-    for elem in v
-        add_edge!(g, mapper[k], mapper[elem])
-    end
-end
-svr = findfirst(isequal("svr"), k)
-dac = findfirst(isequal("dac"), k)
-fft = findfirst(isequal("fft"), k)
-out = findfirst(isequal("out"), k)
-cache_out = Dict(out => 1)
-cache_dac = Dict(dac => 1)
-cache_fft = Dict(fft => 1)
-svr_dac = n_paths!(cache_dac, svr, dac)
-
-sum(elem for elem in Int[])
-
-function dfs(g, src)
-
-end
-
-output = 0
-
-
-
-for p in all_simple_paths(g, dsp_svr, dsp_out)
-    println(p)
-    output += 1
-    output > 3 && break
-end
-output
-
-out_connections = outneighbors.(Ref(g), eachindex(k))
-in_connections = inneighbors.(Ref(g), eachindex(k))
-in_connections_n = length.(in_connections)
-in_connections_n[dsp_out]
-
-
-
-dsp = dijkstra_shortest_paths(g, findall(∈(["svr", "dac", "fft"]), k));
-dsp.dists
-
-
-
-
-count(>(0), dsp_svr.dists)
-count(>(0), dsp_dac.dists)
-count(>(0), dsp_fft.dists)
-findfirst(isequal("svr"), k)
-svr = findfirst(isequal("svr"), k)
-out = findfirst(isequal("out"), k)
-dac = findfirst(isequal("dac"), k)
-fft = findfirst(isequal("fft"), k)
-# svr to fft
-svr2dac = yen_k_shortest_paths(g, svr, dac, weights(g), 2_000);
-svr2fft = yen_k_shortest_paths(g, svr, fft, weights(g), length(k));
-dac2fft = yen_k_shortest_paths(g, dac, fft, weights(g), length(k));
-fft2dac = yen_k_shortest_paths(g, fft, dac, weights(g), length(k));
-dac2out = yen_k_shortest_paths(g, dac, out, weights(g), length(k));
-fft2out = yen_k_shortest_paths(g, fft, out, weights(g), length(k));
-
-maximum(length, svr2dac.paths)
-filter(x -> dac ∉ x, svr2fft.paths)
-
-svr_dac_fft_out = 
-
-struct SvrOutPath
-    cur :: Int
-    dac :: Bool
-    fft :: Bool
-    visited :: Int[]
-    function SvrOutPath(cur, dac, fft)
-    end
-end
-
-output = 0
-finaldest = Int[]
-visited = Int[]
-tovisit = outneighbors(g, findfirst(isequal("you"), k))
-while !isempty(tovisit)
-    for n in tovisit
-        dest = outneighbors(g, n)
-        if findfirst(isequal("out"), k) in dest
-            output += 1
+@testset "Day 11 Part 2" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day11_input.txt"))
+    input = Dict(
+        match(r"^\p{l}{3}", ln).match => collect(m.match for m in eachmatch(r"(\p{l}{3})", replace(ln, r"^\p{l}{3}\:\s" => "")))
+        for ln in input
+    )
+    k = sort!(unique!(append!(collect(keys(input)), reduce(union, values(input)))))
+    mapper = Dict(k[idx] => idx for idx in eachindex(k))
+    g = DiGraph(length(k))
+    for (k, v) in input
+        for elem in v
+            add_edge!(g, mapper[k], mapper[elem])
         end
-        append!(tovisit, dest)
-        push!(visited, n)
     end
-    setdiff!(tovisit, visited)
+    svr = findfirst(isequal("svr"), k)
+    dac = findfirst(isequal("dac"), k)
+    fft = findfirst(isequal("fft"), k)
+    out = findfirst(isequal("out"), k)
+    am_g = adjacency_matrix(g)
+    P = sum(am_g^n for n in 1:(size(g, 1) - 1))
+    @test max(
+        P[svr, dac] * P[dac, fft] * P[fft, out],
+        P[svr, fft] * P[fft, dac] * P[dac, out]
+    ) == 393474305030400
 end
-@test output == 599
-output = 0
-struct PathFromSrvToOut
-    curr :: Int
-    dac :: Bool
-    fft :: Bool
-    function PathFromSrvToOut(curr, dac, fft)
-        if curr == findfirst(isequal("out"), k)
-            global output += dac & fft
-            return nothing
+```
+
+# Day 12
+
+```{julia}
+@testset "Day 12" begin
+    input = readlines(joinpath(DIR_PRJ, "data", "day12_input.txt"))
+    shapes = Matrix{Bool}[]
+    regions = Vector{Int}[]
+    idx = firstindex(input)
+    while idx < length(input)
+        if contains(input[idx], r"^(\d):$")
+            push!(
+                shapes,
+                reduce(
+                    vcat,
+                    permutedims(
+                        graphemes(input[x]) .== "#") for x in (idx+1):(idx+3)
+                )
+            )
+            idx += 4
+        elseif contains(input[idx], r"\d+")
+            push!(regions, [parse(Int, m.match) for m in eachmatch(r"\d+", input[idx])])
+            idx += 1
         else
-            dest = outneighbors(g, curr)
-            dac = dac ? dac : (curr == findfirst(isequal("dac"), k))
-            fft = fft ? fft : (curr == findfirst(isequal("fft"), k))
-            for d in dest
-                PathFromSrvToOut(d, dac, fft)
-            end
+            idx += 1
         end
     end
-end
-PathFromSrvToOut(findfirst(isequal("svr"), k), false, false)
-
-all_paths = Vector{Int}[]
-while 
-
-bfs_parents(g, 1)
-bfs_tree(g, 1)
-
-function all_paths(g::DiGraph, src::Int, dst::Int)
-    """Find all paths from src to dst in directed graph g"""
-    paths = Vector{Vector{Int}}()
-    
-    function dfs(current::Int, target::Int, path::Vector{Int})
-        if current == target
-            push!(paths, copy(path))
-            return
-        end
-        
-        for neighbor in outneighbors(g, current)
-            if !(neighbor in path)  # Avoid cycles
-                push!(path, neighbor)
-                dfs(neighbor, target, path)
-                pop!(path)
-            end
-        end
-    end
-    
-    dfs(src, dst, [src])
-    return paths
-end
-all_paths_you_out = all_paths(g, findfirst(isequal("svr"), k), findfirst(isequal("out"), k))
-all_paths_you_out = all_paths(g, findfirst(isequal("you"), k), findfirst(isequal("out"), k))
-
-
-filter(path -> all(x -> x ∈ path, [findfirst(isequal("dac"), k), findfirst(isequal("fft"), k)]), all_paths_you_out)
-
-findfirst(isequal("dac"), k) .∈ all_paths_you_out
-
-
-g = DiGraph(6)
-add_edge!(g, 1, 2)
-add_edge!(g, 1, 3)
-add_edge!(g, 2, 4)
-add_edge!(g, 3, 4)
-add_edge!(g, 3, 5)
-add_edge!(g, 4, 6)
-add_edge!(g, 5, 6)
-
-paths = all_paths(g, 1, 6)
-for path in paths
-    println(path)
+    @test count(9sum(region[3:end]) ≤ reduce(*, region[1:2]) for region in regions) == 546
 end
 ```
